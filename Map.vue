@@ -7,6 +7,11 @@
              :markerLatLng="markerLatLng"
              :markerName="markerName"
         >
+
+
+
+
+
         </div>
         <div class="map-logo"></div>
     </div>
@@ -14,6 +19,7 @@
 
 <script>
     import L from 'leaflet'
+import  'leaflet.markercluster'
 
     export default {
         name: 'mapirMap',
@@ -73,20 +79,25 @@
             this.initMap()
             this.initLayers()
 
+
         },
         methods: {
             initMap: function () {
-                this.map = L.map('map').setView([this.lat, this.lng], this.zoom,this.mdraggble)
+                this.map = L.map('map').setView([this.lat, this.lng], this.zoom)
+
                 this.tileLayer = L.tileLayer.wms('http://map.ir/shiveh', {
                     layers: 'Shiveh:ShivehGSLD256',
                     format: 'image/png'
                 })
+
                 this.tileLayer.addTo(this.map)
                 this.map.attributionControl.setPrefix(false)
 
+
             },
             initLayers () {
-                var markers = []
+
+                var markers = [];
                 if (this.markerLatLng.length > 0) {
                     for (var i = 0; i < this.markerLatLng.length; i++) {
                         markers[i] = {
@@ -104,20 +115,77 @@
                     iconSize: [32, 32],
                     popupAnchor: [-3, -76]
                 })
-                var omarker= L.marker([53.471, 18.744],{icon:myIcon,
-                    draggable: 'true' }).addTo(this.map);
+
+
+//draggble marker with custom marker
+                var markerss=L.marker([33.1375, 56.2170],{draggable:true ,icon:myIcon}).addTo(this.map)
+                //update  positon of marker
+                markerss.on("dragend", function (ev) {
+
+                    var chagedPos = ev.target.getLatLng();
+                    this.bindPopup(chagedPos.toString()).openPopup();
+                });
+
+
+                //add marker on click on map
+                this.map.on('click',  (e)=> {
 
 
 
 
+                 var  nmarker =  L.marker([e.latlng.lat,e.latlng.lng], {
+                        draggable: true,
+                        title: "Resource location",
+                        alt: "Resource Location",
+                        riseOnHover: true,
+                      icon:myIcon
+                    }).addTo(this.map)
+                        .bindPopup(e.latlng.toString()).openPopup();
+
+                    nmarker.on("dragend", function (ev) {
+
+                        var chagedPos = ev.target.getLatLng();
+                        this.bindPopup(chagedPos.toString()).openPopup();
+
+                    });
+
+                })
+                var addressPoints = [
+                    [-37.8210922667, 175.2209316333, "2"],
+                    [-37.8210819833, 175.2213903167, "3"],
+                    [-37.8210881833, 175.2215004833, "3A"],
+                    [-37.8211946833, 175.2213655333, "1"],
+                    [-37.8209458667, 175.2214051333, "5"],
+                    [-37.8208292333, 175.2214374833, "7"],
+                    [-37.8325816, 175.2238798667, "537"],
+                    [-37.8315855167, 175.2279767, "454"],
+                    [-37.8096336833, 175.2223743833, "176"],
+                    [-37.80970685, 175.2221815833, "178"],
+                    [-37.8102146667, 175.2211562833, "190"],
+                    [-37.8088037167, 175.2242227, "156"],
+                    [-37.8112330167, 175.2193425667, "210"],
+                    [-37.8116368667, 175.2193005167, "212"],
+                    [-37.80812645, 175.2255449333, "146"],
+                    [-37.8080231333, 175.2286383167, "125"],
+                    [-37.8089538667, 175.2222222333, "174"],
+                    [-37.8080905833, 175.2275400667, "129"]
+                ]
 
 
+                var  nnmarkers = new L.markerClusterGroup();
 
-
-
-
-
-            this.layers.forEach((layer) => {
+                for (var i = 0; i < addressPoints.length; i++) {
+                    var a = addressPoints[i];
+                    var title = a[2];
+                    var marker =   L.marker(new L.LatLng(a[0], a[1]), {
+                        icon: myIcon,
+                        title: title
+                    });
+                    marker.bindPopup(title);
+                    nnmarkers.addLayer(marker);
+                }
+                this.map.addLayer(nnmarkers);
+                this.layers.forEach((layer) => {
                     var markerFeatures = layer.features
                     var myIcon = L.icon({
                         iconUrl: 'http://www.pngall.com/wp-content/uploads/2017/05/Map-Marker-Free-Download-PNG.png',
@@ -125,15 +193,43 @@
                         popupAnchor: [-3, -76]
                     })
                     markerFeatures.forEach((feature) => {
-                       feature.leafletObject = L.marker(feature.coords, {icon: myIcon})
-                           .bindPopup(feature.coords.toString()+ "   "+feature.name).addTo(this.map)
+                        feature.leafletObject = L.marker(feature.coords, {icon: myIcon})
+                            .bindPopup(feature.coords.toString() + "   " + feature.name).addTo(this.map)
+
                     })
                 })
-                var newmarker;
 
-                this.map.on('click', function(e) {
-                    newmarker=L.marker(e.latlng);
-                } );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            }
+
+
 
 
 
@@ -174,7 +270,7 @@
                // }
 
 
-        }
+
 
 
 
@@ -183,13 +279,17 @@
 </script>
 
 <style>
-
+@import "~leaflet.markercluster/dist/MarkerCluster.css";
+@import "~leaflet.markercluster/dist/MarkerCluster.Default.css";
     @import "~leaflet/dist/leaflet.css";
+    .map {
+        cursor: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/9632/happy.png");
+    }
 
     .leaflet-container {
         width: 500px;
         height: 500px;
-        cursor: url('http://www.pngall.com/wp-content/uploads/2017/05/Map-Marker-Free-Download-PNG.png');
+        cursor: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/9632/happy.png");
 
     }
     .main {
@@ -208,4 +308,4 @@
         display: table-footer-group;
         left: 45%;
     }
-</style>
+    </style>
